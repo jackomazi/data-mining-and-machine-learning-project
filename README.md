@@ -47,12 +47,6 @@ This application features a dual-mode detection system:
     ```bash
     pip install requests beautifulsoup4 scikit-learn lightgbm joblib
     ```
-
-3.  **Add Your Models:**
-    Place your trained `.pkl` files in the root directory. The script expects:
-    * `vectorizer.pkl`
-    * `mnb_model.pkl`, `svm_model.pkl`, `logreg_model.pkl`, etc.
-
 ---
 
 ## 🚦 How to Use
