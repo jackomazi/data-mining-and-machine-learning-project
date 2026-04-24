@@ -8,60 +8,72 @@ class FakeNewsDetectorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("FakeNews Detector")
-        self.root.geometry("600x750")
-        self.root.resizable(False, False)
+        self.root.geometry("700x800")
+        self.root.configure(bg="#f0f2f5")
 
-        style = ttk.Style()
-        style.theme_use('clam')
+        # Style Configuration
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+        
+        # Color Palette
+        self.primary_color = "#1a73e8"
+        self.bg_color = "#f0f2f5"
+        self.card_color = "#ffffff"
 
+        self.setup_styles()
         self.create_widgets()
 
+    def setup_styles(self):
+        # Header Style
+        self.style.configure("Header.TLabel", font=('Segoe UI', 18, 'bold'), background=self.bg_color, foreground="#202124")
+        
+        # Sub-header Style
+        self.style.configure("SubHeader.TLabel", font=('Segoe UI', 12, 'bold'), background=self.card_color, foreground=self.primary_color)
+        
+        # Action Button Style
+        self.style.configure("Action.TButton", font=('Segoe UI', 11, 'bold'), foreground="white", background=self.primary_color, padding=10)
+        self.style.map("Action.TButton", background=[('active', '#1557b0')])
+
+        # Card Style (The white container)
+        self.style.configure("Card.TFrame", background=self.card_color, relief="flat")
+
     def create_widgets(self):
+        # HEADER
+        header_label = ttk.Label(self.root, text="🛡️ FakeNews Detector", style="Header.TLabel")
+        header_label.pack(pady=(30, 20))
+
+        main_container = ttk.Frame(self.root, style="Card.TFrame", padding=30)
+        main_container.pack(fill="both", expand=True, padx=40, pady=(0, 30))
+
         # ONLINE SECTION (URL)
-        ttk.Label(self.root, text="Online Detection", font=('Helvetica', 12, 'bold')).pack(pady=(20, 5), anchor='w', padx=25)
+        ttk.Label(main_container, text="ONLINE SOURCE", style="SubHeader.TLabel").pack(anchor="w")
+        ttk.Label(main_container, text="Paste a news link to automatically extract content", font=('Segoe UI', 9), background=self.card_color, foreground="grey").pack(anchor="w", pady=(0, 10))
         
-        url_frame = ttk.Frame(self.root)
-        url_frame.pack(fill='x', padx=25)
-        ttk.Label(url_frame, text="URL:").pack(side='left')
-        self.url_entry = ttk.Entry(url_frame, width=50)
-        self.url_entry.pack(side='left', padx=10, fill='x', expand=True)
+        self.url_entry = ttk.Entry(main_container, font=('Segoe UI', 11))
+        self.url_entry.pack(fill="x", pady=(0, 20), ipady=8) 
 
-        ttk.Separator(self.root, orient='horizontal').pack(fill='x', pady=20, padx=25)
+        ttk.Separator(main_container, orient='horizontal').pack(fill='x', pady=20)
 
-        # OFFLINE SECTION (Manual Input)
-        ttk.Label(self.root, text="Offline Detection", font=('Helvetica', 12, 'bold')).pack(pady=5, anchor='w', padx=25)
+        # OFFLINE SECTION (MANUAL INPUT)
+        ttk.Label(main_container, text="OFFLINE SOURCE", style="SubHeader.TLabel").pack(anchor="w")
         
-        title_frame = ttk.Frame(self.root)
-        title_frame.pack(fill='x', padx=25, pady=5)
-        ttk.Label(title_frame, text="Title:").pack(side='left')
-        self.title_entry = ttk.Entry(title_frame, width=50)
-        self.title_entry.pack(side='left', padx=10, fill='x', expand=True)
+        ttk.Label(main_container, text="Article Title", font=('Segoe UI', 10), background=self.card_color).pack(anchor="w", pady=(10, 5))
+        self.title_entry = ttk.Entry(main_container, font=('Segoe UI', 11))
+        self.title_entry.pack(fill="x", pady=(0, 15), ipady=5)
 
-        body_frame = ttk.Frame(self.root)
-        body_frame.pack(fill='both', expand=True, padx=25, pady=5)
-        ttk.Label(body_frame, text="Article Body:").pack(anchor='w')
-        self.body_text = tk.Text(body_frame, height=10, width=50, wrap='word', font=('Helvetica', 10))
-        self.body_text.pack(fill='both', expand=True, pady=5)
+        ttk.Label(main_container, text="Article Body", font=('Segoe UI', 10), background=self.card_color).pack(anchor="w", pady=(5, 5))
+        self.body_text = tk.Text(main_container, height=8, font=('Segoe UI', 10), relief="flat", highlightthickness=1, highlightbackground="#dadce0", padx=10, pady=10)
+        self.body_text.pack(fill="both", expand=True, pady=(0, 20))
 
-        ttk.Separator(self.root, orient='horizontal').pack(fill='x', pady=20, padx=25)
-
-        # MODEL SELECTION AND BUTTON
-        action_frame = ttk.Frame(self.root)
-        action_frame.pack(fill='x', padx=25, pady=10)
-
-        ttk.Label(action_frame, text="Model:").pack(side='left')
+        button_container = ttk.Frame(main_container, style="Card.TFrame")
+        button_container.pack(fill="x")
         
-        models = ["Multinomial Naive Bayes", "SVM", "Logistic Regression", "AdaBoost", "Random Forest", "LightGBM"]
-        self.model_combobox = ttk.Combobox(action_frame, values=models, state="readonly", width=25)
-        self.model_combobox.set(models[0]) 
-        self.model_combobox.pack(side='left', padx=10)
-
-        self.detect_btn = ttk.Button(action_frame, text="Run Detection", command=self.run_detection)
-        self.detect_btn.pack(side='right')
+        self.detect_btn = ttk.Button(button_container, text="RUN ANALYSIS", style="Action.TButton", command=self.run_detection)
+        self.detect_btn.pack(anchor="center")
 
         # RESULT DISPLAY
-        self.result_label = ttk.Label(self.root, text="Result: Waiting for input...", font=('Helvetica', 13, 'bold'), foreground="blue")
-        self.result_label.pack(pady=25)
+        self.result_label = ttk.Label(self.root, text="Waiting for input...", font=('Segoe UI', 14, 'bold'), background=self.bg_color, foreground="#5f6368")
+        self.result_label.pack(anchor="center",pady=(0, 30))
 
     def extract_text_from_url(self, url):
         """
@@ -88,7 +100,7 @@ class FakeNewsDetectorApp:
         except Exception as e:
             raise Exception(f"Failed to scrape URL: {e}")
 
-    def make_prediction(self, text, model_name):
+    def make_prediction(self, text):
         """
         Loads the real model and vectorizer to perform a prediction.
         """
@@ -97,19 +109,9 @@ class FakeNewsDetectorApp:
             # This turns the scraped text into the numerical format the model understands
             vectorizer = joblib.load('vectorizer.pkl')
             
-            # Map the UI name to your saved filename
-            model_files = {
-                "Multinomial Naive Bayes": "mnb_model.pkl",
-                "SVM": "svm_model.pkl",
-                "Logistic Regression": "logreg_model.pkl",
-                "AdaBoost": "adaboost_model.pkl",
-                "Random Forest": "random_forest_model.pkl",
-                "LightGBM": "lgbm_model.pkl"
-            }
+            # Load your single best model here
+            filename = "random_forest_model.pkl"
             
-            filename = model_files.get(model_name)
-            
-            # Load the specific model chosen in the GUI
             model = joblib.load(filename)
             
             # Transform the text and predict
@@ -129,7 +131,6 @@ class FakeNewsDetectorApp:
 
     def run_detection(self):
         url_val = self.url_entry.get().strip()
-        selected_model = self.model_combobox.get()
 
         title_to_analyze = ""
         body_to_analyze = ""
@@ -168,11 +169,11 @@ class FakeNewsDetectorApp:
             return
 
         # Prediction
-        self.result_label.config(text=f"Analyzing with {selected_model}...", foreground="orange")
+        self.result_label.config(text="Analyzing...", foreground="orange")
         self.root.update()
 
         combined_text = f"{title_to_analyze} {body_to_analyze}"
-        final_result = self.make_prediction(combined_text, selected_model)
+        final_result = self.make_prediction(combined_text)
 
         color = "red" if "FAKE" in final_result else "green"
         self.result_label.config(text=f"[{mode}] {final_result}", foreground=color)
