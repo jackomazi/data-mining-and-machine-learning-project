@@ -209,7 +209,7 @@ class FakeNewsDetectorApp:
             messagebox.showerror("Model Error", "Your model does not support predict_proba(). Ensure you are using a model that outputs probabilities (like Random Forest or Logistic Regression).")
         except Exception as e:
             messagebox.showerror("LIME Error", f"Failed to generate explanation: {str(e)}")
-        finally:
+        finally: 
             # Reset button
             self.explain_btn.config(text="VIEW LIME EXPLANATION", state="normal")
 
