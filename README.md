@@ -23,7 +23,7 @@ This application features a dual-mode detection system:
     * AdaBoost
     * Random Forest
     * LightGBM
-* **Clear Verdicts:** Color-coded results (🔴 **Fake News** / 🟢 **Real News**) for immediate clarity.
+* **Clear Verdicts:** Color-coded results (**Fake News** / **Real News**) for immediate clarity.
 
 ---
 
@@ -65,17 +65,3 @@ This application features a dual-mode detection system:
 3.  **Analyze Manually:** Ensure the URL field is empty, type the **Title** and **Body** in the respective boxes, select a model, and click **Run Detection**.
 
 ---
-
-## ⚠️ Disclaimer
-This tool is intended for educational and research purposes. AI models are trained on historical data and may not always reflect current events or nuances correctly. Always verify important news through multiple reputable sources.
-
----
-
-## 🤝 Contributing
-Contributions are welcome! If you'd like to improve the scraping logic or add new models:
-1.  Create a new **Branch**.
-2.  Commit your changes.
-3.  Open a **Pull Request**.
-
----
-*Created with ❤️ to fight misinformation.*
