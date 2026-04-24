@@ -176,7 +176,7 @@ class FakeNewsDetectorApp:
         final_result = self.make_prediction(combined_text)
 
         color = "red" if "FAKE" in final_result else "green"
-        self.result_label.config(text=f"[{mode}] {final_result}", foreground=color)
+        self.result_label.config(text=f"{final_result}", foreground=color)
 
 if __name__ == "__main__":
     root = tk.Tk()
