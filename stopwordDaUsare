@@ -1,0 +1,10 @@
+custom_stopwords = [
+    # Verbi e intercalari
+    'said', 'mr', 'mrs', 'just', 'like', 'new', 'year', 'time', 'also', 'would', 'one',
+    # Politica (Rimuovere se vuoi un modello agnostico rispetto ai nomi)
+    'trump', 'clinton', 'hillary', 'obama', 'donald', 'barack', 'president', 
+    'state', 'states', 'government', 'house', 'white', 'republican', 'democrat', 'american',
+    # Metadata e Fonti (Queste "sporcano" il test)
+    'reuters', 'washington', 'featured', 'image', 'images', 'getty', 'pic', 
+    'twitter', 'com', 'via', 'fox', 'news', 'video', 'youtube'
+]
