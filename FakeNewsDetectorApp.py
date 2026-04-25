@@ -5,7 +5,14 @@ from bs4 import BeautifulSoup
 import joblib
 import webbrowser
 import os
+import re
+import numpy as np
+import scipy.sparse as sp
 from lime.lime_text import LimeTextExplainer
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from spellchecker import SpellChecker
 
 class FakeNewsDetectorApp:
     def __init__(self, root):
@@ -13,6 +20,9 @@ class FakeNewsDetectorApp:
         self.root.title("FakeNews Detector")
         self.root.geometry("700x850")
         self.root.configure(bg="#f0f2f5")
+
+        # Initialize NLTK and SpellChecker components
+        self.init_nlp_tools()
 
         # Style Configuration
         self.style = ttk.Style()
@@ -23,13 +33,26 @@ class FakeNewsDetectorApp:
         self.bg_color = "#f0f2f5"
         self.card_color = "#ffffff"
         
-        # Cache for model and vectorizer (LIME needs them loaded in memory)
+        # Cache for models (LIME needs them loaded in memory)
         self.vectorizer = None
+        self.scaler = None  # MinMaxScaler for stylometry
         self.model = None
         self.last_analyzed_text = ""
 
         self.setup_styles()
         self.create_widgets()
+
+    def init_nlp_tools(self):
+        """Downloads NLTK resources and initializes the spellchecker."""
+        print("Initializing NLP tools...")
+        try:
+            nltk.download('stopwords', quiet=True)
+            nltk.download('punkt', quiet=True)
+            nltk.download('punkt_tab', quiet=True)
+            self.stop_words = set(stopwords.words('english'))
+            self.spell = SpellChecker()
+        except Exception as e:
+            print(f"Warning: Issue initializing NLP tools: {e}")
 
     def setup_styles(self):
         self.style.configure("Header.TLabel", font=('Segoe UI', 18, 'bold'), background=self.bg_color, foreground="#202124")
@@ -40,7 +63,6 @@ class FakeNewsDetectorApp:
         
         # Secondary Button for LIME
         self.style.configure("Secondary.TButton", font=('Segoe UI', 10, 'bold'), foreground="#1a73e8", background=self.card_color, padding=8)
-
         self.style.configure("Card.TFrame", background=self.card_color, relief="flat")
 
     def create_widgets(self):
@@ -106,20 +128,99 @@ class FakeNewsDetectorApp:
         except Exception as e:
             raise Exception(f"Failed to scrape URL: {e}")
 
-    def load_models_if_needed(self):
-        """Loads models into memory once to speed up LIME and predictions."""
-        if self.vectorizer is None or self.model is None:
+    def load_models(self):
+        """Loads vectorizer, scaler, and model into memory once."""
+        if self.vectorizer is None or self.model is None or self.scaler is None:
             try:
                 self.vectorizer = joblib.load('vectorizer.pkl')
+                self.scaler = joblib.load('min_max_scaler.pkl') 
                 self.model = joblib.load('random_forest_model.pkl')
             except Exception as e:
                 raise Exception(f"Failed to load models: {e}")
 
-    def make_prediction(self, text):
+    # TEXT CLEANING AND FEATURE EXTRACTION METHODS
+
+    def clean_text(self, text):
+        """Applies NLTK and Regex cleaning steps for the TF-IDF vectorizer."""
+        # Noise Removal (HTML, URLs, non-alphanumeric)
+        text = re.sub(r'<.*?>', '', text)
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+        text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+        
+        # Case Folding
+        text = text.lower()
+        
+        # Tokenization 
+        tokens = word_tokenize(text)
+        
+        # Stopword Elimination
+        filtered_tokens = [w for w in tokens if w not in self.stop_words]
+        
+        return " ".join(filtered_tokens)
+
+    def count_spelling_errors(self, text):
+        """Calculates the ratio of spelling errors in a text."""
+        if not isinstance(text, str) or len(text) == 0:
+            return 0
+        # Divide into words
+        words = re.findall(r'\b\w+\b', text.lower())
+        if len(words) == 0:
+            return 0
+        
+        misspelled = self.spell.unknown(words)
+        return len(misspelled) / len(words)
+
+    def extract_stylometric_features(self, combined_text):
+        """
+        Extracts stylometric features. Expects Title and Body to be separated by '|||'.
+        If '|||' is missing (e.g., LIME perturbation), it treats the whole text as body.
+        """
+        parts = combined_text.split("|||", 1)
+        if len(parts) == 2:
+            title, text_body = parts
+        else:
+            title, text_body = "", combined_text
+
+        # length of the text
+        text_length = len(text_body)
+        
+        # uppercase chars ratio in the title
+        title_uppercase_ratio = sum(1 for c in title if c.isupper()) / len(title) if len(title) > 0 else 0
+        
+        # ratio of exclamation point and question mark in the title
+        title_exclamation_ratio = (title.count('!') + title.count('?')) / len(title) if len(title) > 0 else 0
+        
+        # ratio of exclamation point and question mark in the text
+        text_exclamation_ratio = (text_body.count('!') + text_body.count('?')) / len(text_body) if len(text_body) > 0 else 0
+        
+        # spelling errors ratio (calculated on full combined text)
+        full_text = title + " " + text_body
+        spelling_errors_ratio = self.count_spelling_errors(full_text)
+        
+        # Return as 2D array for the scaler
+        return np.array([[text_length, title_uppercase_ratio, title_exclamation_ratio, text_exclamation_ratio, spelling_errors_ratio]])
+
+    # PREDICTION AND PIPELINE
+    def make_prediction(self, combined_text):
         try:
-            self.load_models_if_needed()
-            vectorized_text = self.vectorizer.transform([text])
-            prediction = self.model.predict(vectorized_text)
+            self.load_models()
+            
+            # Remove the separator to get standard text for cleaning
+            full_text_for_cleaning = combined_text.replace("|||", " ")
+            cleaned_text = self.clean_text(full_text_for_cleaning)
+            
+            # Transform cleaned text using TF-IDF (Sparse Matrix)
+            vectorized_text = self.vectorizer.transform([cleaned_text])
+            
+            # Extract and scale stylometric features (Dense Matrix)
+            raw_stylo_features = self.extract_stylometric_features(combined_text)
+            scaled_stylo_features = self.scaler.transform(raw_stylo_features)
+            
+            # Combine TF-IDF and Stylometric features safely
+            combined_features = sp.hstack([vectorized_text, scaled_stylo_features])
+            
+            # Predict
+            prediction = self.model.predict(combined_features)
             
             return "FAKE NEWS" if prediction[0] == 0 else "REAL NEWS"
         except Exception as e:
@@ -160,7 +261,10 @@ class FakeNewsDetectorApp:
         self.result_label.config(text="Analyzing...", foreground="orange")
         self.root.update()
 
-        combined_text = f"{title_to_analyze} {body_to_analyze}"
+        # We combine Title and Body using a unique separator "|||"
+        # This allows extract_stylometric_features to distinguish them, 
+        # while LIME can still treat it as a single string document.
+        combined_text = f"{title_to_analyze}|||{body_to_analyze}"
         self.last_analyzed_text = combined_text
         
         final_result = self.make_prediction(combined_text)
@@ -168,49 +272,60 @@ class FakeNewsDetectorApp:
         if "Error" not in final_result:
             color = "#d93025" if "FAKE" in final_result else "#188038" # Red vs Green
             self.result_label.config(text=f"{final_result}", foreground=color)
-            # Enable the LIME button since analysis was successful
             self.explain_btn.config(state="normal")
         else:
             self.result_label.config(text=final_result, foreground="red")
 
-    # LIME
+    # LIME EXPLANATION
     def predict_proba_pipeline(self, texts):
-        """Helper function for LIME. Takes raw texts, transforms them, and returns probabilities."""
-        vectorized_texts = self.vectorizer.transform(texts)
-        return self.model.predict_proba(vectorized_texts)
+        """
+        Helper function for LIME. Takes raw texts, transforms them 
+        (Cleaning -> TF-IDF + Scaled Stylometry), and returns probabilities.
+        """
+        # Clean texts (remove the "|||" separator before cleaning)
+        cleaned_texts = [self.clean_text(t.replace("|||", " ")) for t in texts]
+        
+        # Vectorize text (Sparse)
+        vectorized_texts = self.vectorizer.transform(cleaned_texts)
+        
+        # Extract stylometric features for ALL texts generated by LIME
+        raw_stylo_list = [self.extract_stylometric_features(t)[0] for t in texts]
+        raw_stylo_array = np.array(raw_stylo_list)
+        
+        # Scale the batch of stylometric features
+        scaled_stylo_array = self.scaler.transform(raw_stylo_array)
+        
+        # Combine features
+        combined_features = sp.hstack([vectorized_texts, scaled_stylo_array])
+        
+        # Return prediction probabilities
+        return self.model.predict_proba(combined_features)
 
     def show_lime_explanation(self):
         if not self.last_analyzed_text:
             return
 
-        # Show user that the report is being generated
         self.explain_btn.config(text="GENERATING REPORT...", state="disabled")
         self.root.update()
 
         try:
-            # Initialize LIME explainer
             explainer = LimeTextExplainer(class_names=['FAKE NEWS', 'REAL NEWS'])
             
-            # Generate Explanation
             exp = explainer.explain_instance(
                 self.last_analyzed_text, 
                 self.predict_proba_pipeline, 
-                num_features=15 # Top 15 words
+                num_features=15 
             )
             
-            # Save to a temporary HTML file
             html_file_path = os.path.abspath("lime_report.html")
             exp.save_to_file(html_file_path)
-            
-            # Open the HTML file in the default web browser
             webbrowser.open(f"file://{html_file_path}")
             
         except AttributeError:
-            messagebox.showerror("Model Error", "Your model does not support predict_proba(). Ensure you are using a model that outputs probabilities (like Random Forest or Logistic Regression).")
+            messagebox.showerror("Model Error", "Your model does not support predict_proba().")
         except Exception as e:
             messagebox.showerror("LIME Error", f"Failed to generate explanation: {str(e)}")
         finally: 
-            # Reset button
             self.explain_btn.config(text="VIEW LIME EXPLANATION", state="normal")
 
 if __name__ == "__main__":
