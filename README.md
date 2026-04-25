@@ -1,4 +1,4 @@
-# 🛡️ AI-Powered Fake News Detector
+# 🛡️ FakeNews Detector
 
 A desktop application designed to help users identify the credibility of news articles. By leveraging Machine Learning and real-time web scraping, this tool provides a fast and intuitive way to cross-check information.
 
