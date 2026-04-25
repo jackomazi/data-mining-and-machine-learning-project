@@ -134,7 +134,7 @@ class FakeNewsDetectorApp:
             try:
                 self.vectorizer = joblib.load('vectorizer.pkl')
                 self.scaler = joblib.load('min_max_scaler.pkl') 
-                self.model = joblib.load('random_forest_model.pkl')
+                self.model = joblib.load('lightgbm_fake_news_model.pkl')
             except Exception as e:
                 raise Exception(f"Failed to load models: {e}")
 
