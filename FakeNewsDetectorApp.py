@@ -132,8 +132,8 @@ class FakeNewsDetectorApp:
         """Loads vectorizer, scaler, and model into memory once."""
         if self.vectorizer is None or self.model is None or self.scaler is None:
             try:
-                self.vectorizer = joblib.load('vectorizer.pkl')
-                self.scaler = joblib.load('min_max_scaler.pkl') 
+                self.vectorizer = joblib.load('tfidf_vectorizer.pkl')
+                self.scaler = joblib.load('stylometric_scaler.pkl') 
                 self.model = joblib.load('lightgbm_fake_news_model.pkl')
             except Exception as e:
                 raise Exception(f"Failed to load models: {e}")
