@@ -13,6 +13,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from spellchecker import SpellChecker
+from nltk.stem import WordNetLemmatizer
 
 class FakeNewsDetectorApp:
     def __init__(self, root):
@@ -43,14 +44,31 @@ class FakeNewsDetectorApp:
         self.create_widgets()
 
     def init_nlp_tools(self):
-        """Downloads NLTK resources and initializes the spellchecker."""
+        """Downloads NLTK resources and initializes the spellchecker and lemmatizer."""
         print("Initializing NLP tools...")
         try:
             nltk.download('stopwords', quiet=True)
             nltk.download('punkt', quiet=True)
             nltk.download('punkt_tab', quiet=True)
+
+            nltk.download('wordnet', quiet=True)
+            nltk.download('omw-1.4', quiet=True)
+            
             self.stop_words = set(stopwords.words('english'))
+            
+            custom_stopwords = [
+                'said', 'mr', 'mrs', 'just', 'like', 'new', 'year', 'time', 'also', 'would', 'one',
+                'trump', 'clinton', 'hillary', 'obama', 'donald', 'barack', 'president', 
+                'state', 'states', 'government', 'house', 'white', 'republican', 'democrat', 'american',
+                'reuters', 'washington', 'featured', 'image', 'images', 'getty', 'pic', 
+                'twitter', 'com', 'via', 'fox', 'news', 'video', 'youtube'
+            ]
+            self.stop_words.update(custom_stopwords)
+            
             self.spell = SpellChecker()
+            
+            self.lemmatizer = WordNetLemmatizer()
+            
         except Exception as e:
             print(f"Warning: Issue initializing NLP tools: {e}")
 
