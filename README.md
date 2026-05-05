@@ -45,9 +45,8 @@ This application features a dual-mode detection system:
 
 2.  **Install Required Libraries:**
     ```bash
-    pip install requests beautifulsoup4 scikit-learn lightgbm joblib
-    ```
----
+pip install requests beautifulsoup4 joblib numpy scipy lime nltk pyspellchecker scikit-learn    ```
+
 
 ## 🚦 How to Use
 
