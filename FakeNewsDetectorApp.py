@@ -171,10 +171,13 @@ class FakeNewsDetectorApp:
         # Tokenization 
         tokens = word_tokenize(text)
         
-        # Stopword Elimination
-        filtered_tokens = [w for w in tokens if w not in self.stop_words]
-        
-        return " ".join(filtered_tokens)
+        # Lemmatization
+        lemmas = [self.lemmatizer.lemmatize(token) for token in tokens]
+    
+        # Stopword Removal (using the custom stopword list)
+        final_tokens = [w for w in lemmas if w not in self.stop_words]
+    
+        return " ".join(final_tokens)
 
     def count_spelling_errors(self, text):
         """Calculates the ratio of spelling errors in a text."""
