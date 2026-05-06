@@ -160,10 +160,9 @@ class FakeNewsDetectorApp:
 
     def clean_text(self, text):
         """Applies NLTK and Regex cleaning steps for the TF-IDF vectorizer."""
-        # Noise Removal (HTML, URLs, non-alphanumeric)
+        # Noise Removal (HTML, URLs)
         text = re.sub(r'<.*?>', '', text)
         text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
-        text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
         
         # Case Folding
         text = text.lower()
@@ -171,10 +170,18 @@ class FakeNewsDetectorApp:
         # Tokenization 
         tokens = word_tokenize(text)
         
-        # Stopword Elimination
-        filtered_tokens = [w for w in tokens if w not in self.stop_words]
+        # Lemmatization
+        lemmas = [self.lemmatizer.lemmatize(token) for token in tokens]
+    
+        # Stopword elimination + removes everything that is not a letter, number or space
+        cleaned_tokens = []
+        for w in lemmas:
+            clean_w = re.sub(r'[^\w\s]', '', w)
+            if clean_w and clean_w not in self.stop_words:
+                cleaned_tokens.append(clean_w)
+
         
-        return " ".join(filtered_tokens)
+        return " ".join(cleaned_tokens)
 
     def count_spelling_errors(self, text):
         """Calculates the ratio of spelling errors in a text."""
