@@ -44,8 +44,7 @@ class FakeNewsDetectorApp:
         self.create_widgets()
 
     def init_nlp_tools(self):
-        """Downloads NLTK resources and initializes the spellchecker and lemmatizer."""
-        print("Initializing NLP tools...")
+        """Downloads NLTK resources and initializes the spellchecker and lemmatizer"""
         try:
             nltk.download('stopwords', quiet=True)
             nltk.download('punkt', quiet=True)
@@ -79,7 +78,7 @@ class FakeNewsDetectorApp:
         self.style.configure("Action.TButton", font=('Segoe UI', 11, 'bold'), foreground="white", background=self.primary_color, padding=10)
         self.style.map("Action.TButton", background=[('active', '#1557b0')])
         
-        # Secondary Button for LIME
+        # Secondary button for LIME
         self.style.configure("Secondary.TButton", font=('Segoe UI', 10, 'bold'), foreground="#1a73e8", background=self.card_color, padding=8)
         self.style.configure("Card.TFrame", background=self.card_color, relief="flat")
 
@@ -100,7 +99,7 @@ class FakeNewsDetectorApp:
 
         ttk.Separator(main_container, orient='horizontal').pack(fill='x', pady=20)
 
-        # Offline section (Manual input)
+        # Offline section (manual input)
         ttk.Label(main_container, text="OFFLINE SOURCE", style="SubHeader.TLabel").pack(anchor="w")
         
         ttk.Label(main_container, text="Article Title", font=('Segoe UI', 10), background=self.card_color).pack(anchor="w", pady=(10, 5))
@@ -125,7 +124,7 @@ class FakeNewsDetectorApp:
         self.result_label = ttk.Label(result_container, text="Waiting for input...", font=('Segoe UI', 14, 'bold'), background=self.bg_color, foreground="#5f6368")
         self.result_label.pack(pady=(10, 10))
 
-        # LIME explanation button (Hidden until analysis is done)
+        # LIME explanation button (hidden until analysis is done)
         self.explain_btn = ttk.Button(result_container, text="VIEW LIME EXPLANATION", style="Secondary.TButton", command=self.show_lime_explanation, state="disabled")
         self.explain_btn.pack(pady=(0, 20))
 
@@ -147,7 +146,7 @@ class FakeNewsDetectorApp:
             raise Exception(f"Failed to scrape URL: {e}")
 
     def load_models(self):
-        """Loads vectorizer, scaler, and model into memory once."""
+        """Loads vectorizer, scaler, and model into memory once"""
         if self.vectorizer is None or self.model is None or self.scaler is None:
             try:
                 self.vectorizer = joblib.load(r'saved_models\tfidf_vectorizer.pkl')
@@ -159,7 +158,7 @@ class FakeNewsDetectorApp:
     # Text cleaning and feature extraction methods
 
     def clean_text(self, text):
-        """Applies NLTK and Regex cleaning steps for the TF-IDF vectorizer."""
+        """Applies NLTK and Regex cleaning steps for the TF-IDF vectorizer"""
         # Noise Removal (HTML, URLs)
         text = re.sub(r'<.*?>', '', text)
         text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
@@ -184,7 +183,7 @@ class FakeNewsDetectorApp:
         return " ".join(cleaned_tokens)
 
     def count_spelling_errors(self, text):
-        """Calculates the ratio of spelling errors in a text."""
+        """Calculates the ratio of spelling errors in a text"""
         if not isinstance(text, str) or len(text) == 0:
             return 0
         # Divide into words
@@ -197,8 +196,8 @@ class FakeNewsDetectorApp:
 
     def extract_stylometric_features(self, combined_text):
         """
-        Extracts stylometric features. Expects Title and Body to be separated by '|||'.
-        If '|||' is missing (e.g., LIME perturbation), it treats the whole text as body.
+        Extracts stylometric features. Expects Title and Body to be separated by '|||',
+        if '|||' is missing (e.g., LIME perturbation), it treats the whole text as body
         """
         parts = combined_text.split("|||", 1)
         if len(parts) == 2:
@@ -288,7 +287,7 @@ class FakeNewsDetectorApp:
 
         # We combine Title and Body using a unique separator "|||"
         # This allows extract_stylometric_features to distinguish them, 
-        # while LIME can still treat it as a single string document.
+        # while LIME can still treat it as a single string document
         combined_text = f"{title_to_analyze}|||{body_to_analyze}"
         self.last_analyzed_text = combined_text
         
@@ -305,7 +304,7 @@ class FakeNewsDetectorApp:
     def predict_proba_pipeline(self, texts):
         """
         Helper function for LIME. Takes raw texts, transforms them 
-        (Cleaning -> TF-IDF + Scaled Stylometry), and returns probabilities.
+        (Cleaning and then TF-IDF + Scaled Stylometry), and returns probabilities
         """
         # Clean texts (remove the "|||" separator before cleaning)
         cleaned_texts = [self.clean_text(t.replace("|||", " ")) for t in texts]
