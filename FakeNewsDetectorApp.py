@@ -56,11 +56,21 @@ class FakeNewsDetectorApp:
             self.stop_words = set(stopwords.words('english'))
             
             custom_stopwords = [
-                'said', 'mr', 'mrs', 'just', 'like', 'new', 'year', 'time', 'also', 'would', 'one',
-                'trump', 'clinton', 'hillary', 'obama', 'donald', 'barack', 'president', 
-                'state', 'states', 'government', 'house', 'white', 'republican', 'democrat', 'american',
-                'reuters', 'washington', 'featured', 'image', 'images', 'getty', 'pic', 
-                'twitter', 'com', 'via', 'fox', 'news', 'video', 'youtube'
+                "featured",
+                "image",
+                "twitter",
+                "com",
+                "pic",
+                "getty",
+                "news",
+                "said",
+                "mr",
+                "just",
+                "like",
+                "year",
+                "time",
+                "new",
+                "old",
             ]
             self.stop_words.update(custom_stopwords)
             
@@ -151,7 +161,7 @@ class FakeNewsDetectorApp:
             try:
                 self.vectorizer = joblib.load(r'saved_models\tfidf_vectorizer.pkl')
                 self.scaler = joblib.load(r'saved_models\stylometric_scaler.pkl') 
-                self.model = joblib.load(r'saved_models\lightgbm_tuned.pkl')
+                self.model = joblib.load(r'saved_models\final_lightgbm_model.pkl')
             except Exception as e:
                 raise Exception(f"Failed to load models: {e}")
 
