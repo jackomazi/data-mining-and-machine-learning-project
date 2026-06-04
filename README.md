@@ -35,17 +35,12 @@ This application features a dual-mode detection system:
 
 ---
 
-## 📦 Installation & Setup
-
-1.  **Clone the Repository:**
-    ```bash
-    git clone [https://github.com/your-username/fake-news-detector.git](https://github.com/your-username/fake-news-detector.git)
-    cd fake-news-detector
-    ```
+## Setup
 
 2.  **Install Required Libraries:**
     ```bash
-pip install requests beautifulsoup4 joblib numpy scipy lime nltk pyspellchecker scikit-learn    ```
+    pip install -r requirements.txt    
+    ```
 
 
 ## 🚦 How to Use
