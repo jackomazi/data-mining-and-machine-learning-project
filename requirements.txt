@@ -1,0 +1,12 @@
+nltk
+matplotlib
+seaborn
+numpy
+scipy
+joblib
+pandas
+pyspellchecker
+scikit-learn
+lightgbm
+shap
+statsmodels
