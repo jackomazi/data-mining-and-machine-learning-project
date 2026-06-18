@@ -47,7 +47,7 @@ This application features a dual-mode detection system:
 
 1.  **Launch the App:**
     ```bash
-    python main.py
+    python FakeNewsDetectorApp.py
     ```
 2.  **Analyze a Website:** Paste a link into the **URL** field and click **Run Detection**.
 3.  **Analyze Manually:** Ensure the URL field is empty, type the **Title** and **Body** in the respective boxes, select a model, and click **Run Detection**.
