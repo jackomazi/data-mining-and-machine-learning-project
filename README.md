@@ -6,6 +6,7 @@ University of Pisa, A.Y. 2025–2026.
 
 Desktop application for fake news classification using Machine Learning and automated web scraping.
 Developed for the Data Mining and Machine Learning course, A.Y. 2025-2026. 
+
 **Authors:** [Alessio Grillo](https://github.com/agrillo6-prog), [Andrea Giacomazzi](https://github.com/jackomazi)
 
 ---
